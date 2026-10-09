@@ -32,7 +32,8 @@ dsh web
 
 打开：
 
-**设置 → 插件 → 插件配置 → 搜索 MCP**
+**设置 → 搜索 MCP**（Settings 侧栏；Desktop 0.2 / Web 均适用）  
+Web 旧路径仍可用：**设置 → 插件 → 插件配置 → 搜索 MCP**
 
 ### 已知 provider
 
@@ -97,7 +98,8 @@ RC2 的 `credentials/reference-updated` 事件会刷新设置卡片中的“已�
 ## DSH 0.1.1-rc.2 适配
 
 - DSH host 依赖精确锁定为 `0.1.1-rc.2`，不使用可能落到旧版本线的子包 `latest`。
-- 设置卡片继续使用 keyed slot：`settings.plugin.item` + `key: "search-mcp"`。
+- Settings 侧栏：`settings.section` + `id: "search-mcp"`（Desktop 0.2 主入口）。
+- 设置卡片继续使用 keyed slot：`settings.plugin.item` + `key: "search-mcp"`（Web 插件配置页）。
 - 新密钥通过 `credentials.set` 单向写入，凭据状态通过 `credentials.describe` 读取。
 - 监听 RC2 的 `credentials/reference-updated`，外部凭据变更后刷新状态 badge。
 - RC6/RC7 遗留的字面 `apiKey` 仍可由 Host 使用；涉及服务器数组的编辑会阻止不可见旧密钥被意外删除，并要求先迁移。
@@ -167,7 +169,7 @@ dsh --profile web --dump-config |
 - `defaultServer "x" is not configured`：默认 id 没有匹配任何服务器行。
 - `URL policy` 拒绝：endpoint 非 HTTP(S)，或 DNS 结果包含本地、私有、保留/测试地址。
 - stdio 启动失败：确认 Node/npm 可用，且运行环境允许 `npx` 获取或执行对应 MCP 包。
-- 设置页没有 Search MCP 卡片：确认 client bundle 已安装，重启 DSH Web 后强制刷新页面。
+- 设置页没有 Search MCP：确认 client bundle 已安装；Desktop 看侧栏「搜索 MCP」，Web 亦可看插件配置卡；改完后重启 Desktop / `dsh web` 并硬刷新。
 - 返回结果仍被截断：检查实际 agent preset 中的 `tool-web.searchMaxResults`，以及全局/单服务器 `maxResults`。
 
 ## 卸载

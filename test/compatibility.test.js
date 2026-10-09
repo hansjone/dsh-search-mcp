@@ -7,11 +7,12 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (path) => readFile(resolve(root, path), 'utf8');
 
-test('package exports resolve and RC2 dependencies stay pinned', async () => {
+test('package exports resolve and peerDependencies stay open', async () => {
   const pkg = JSON.parse(await read('package.json'));
   assert.equal(pkg.exports['.'], './lib/index.js');
   assert.equal(pkg.exports['./client'], './lib/client.browser.js');
   assert.equal(pkg.engines.node, '>=20');
+  assert.equal(pkg.version, '0.2.3');
 
   for (const name of [
     '@deepseek-ai/dsh-api-remotes',
@@ -19,28 +20,39 @@ test('package exports resolve and RC2 dependencies stay pinned', async () => {
     '@deepseek-ai/dsh-launch-environment',
     '@deepseek-ai/dsh-settings',
     '@deepseek-ai/dsh-web',
+    '@deepseek-ai/schemastery',
   ]) {
-    assert.equal(pkg.dependencies[name], '0.1.1-rc.2');
+    assert.equal(pkg.peerDependencies[name], '*');
   }
-  assert.equal(pkg.dependencies['@deepseek-ai/schemastery'], '3.18.1');
   assert.equal(pkg.dependencies.undici, '6.28.0');
   assert.equal(pkg.dependencies['ipaddr.js'], '2.5.0');
   assert.equal(pkg.dependencies['@modelcontextprotocol/sdk'], '1.30.0');
 });
 
-test('RC2 browser bundle uses keyed settings slot and credential migration', async () => {
+test('browser half registers Settings sidebar + deferred form attach', async () => {
   const client = await read('lib/client.browser.js');
+  assert.match(client, /name: "settings\.section"/);
+  assert.match(client, /SearchMcpSection/);
+  assert.match(client, /createDeferredScope/);
+  assert.match(client, /createMemoryScope/);
   assert.match(client, /name: "settings\.plugin\.item",\s+key: NS,/);
   assert.doesNotMatch(client, /name: "settings\.plugin\.item",\s+id:/);
-  assert.match(client, /api\.settings\.describe\(\{\}\)/);
-  assert.match(client, /api\.credentials\.describe\(\{ refs: refs\.slice\(index, index \+ CREDENTIAL_DESCRIBE_BATCH_SIZE\) \}\)/);
-  assert.match(client, /api\.credentials\.set\(\{ ref, value \}\)/);
+  assert.match(client, /name: "plugins\.item"/);
+  assert.match(client, /configForms/);
+  assert.match(client, /whileServed/);
   assert.match(client, /credentials\/reference-updated/);
   assert.match(client, /CREDENTIAL_DESCRIBE_BATCH_SIZE = 64/);
-  assert.match(client, /api\.credentials\.unset\(\{ ref \}\)/);
-  assert.match(client, /rollbackSettingsWrites/);
   assert.match(client, /legacyKeyBlocked/);
-  assert.match(client, /deepEqualJson\(current\[field\], value\)/);
+  assert.match(client, /remote\.settings\.describe\(\)/);
+  assert.match(client, /remote\.credentials\.set\(/);
+});
+
+test('host Config marks editable fields volatile for Desktop 0.2', async () => {
+  const host = await read('lib/index.js');
+  assert.match(host, /function vol\(/);
+  assert.match(host, /defaultServer: vol\(/);
+  assert.match(host, /servers: vol\(/);
+  assert.match(host, /settings\.register\(/);
 });
 
 test('known providers are CDKey-only while custom keeps advanced fields', async () => {
@@ -66,6 +78,7 @@ test('HTTP transport pins DNS and applies one guarded fetch to every SDK request
   assert.match(transport, /await client\.close\(\)[\s\S]*await runtime\?\.close\(\)/);
   assert.doesNotMatch(transport, /new URL\(server\.url\)[\s\S]*new StreamableHTTPClientTransport\(url, \{\s*requestInit:/);
 });
+
 test('bundle replaces built-in search and leaves default row endpoint-free', async () => {
   const patch = await read('cordis.patch.yml');
   assert.match(patch, /searchProvider: search-mcp/);
