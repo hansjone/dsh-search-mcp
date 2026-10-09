@@ -12,7 +12,7 @@ test('package exports resolve and peerDependencies stay open', async () => {
   assert.equal(pkg.exports['.'], './lib/index.js');
   assert.equal(pkg.exports['./client'], './lib/client.browser.js');
   assert.equal(pkg.engines.node, '>=20');
-  assert.equal(pkg.version, '0.2.4');
+  assert.equal(pkg.version, '0.2.5');
 
   for (const name of [
     '@deepseek-ai/dsh-api-remotes',
@@ -35,8 +35,7 @@ test('browser half registers Settings sidebar + deferred form attach', async () 
   assert.match(client, /SearchMcpSection/);
   assert.match(client, /createDeferredScope/);
   assert.match(client, /createMemoryScope/);
-  assert.match(client, /name: "settings\.plugin\.item",\s+key: NS,/);
-  assert.doesNotMatch(client, /name: "settings\.plugin\.item",\s+id:/);
+  assert.doesNotMatch(client, /settings\.plugin\.item/);
   assert.match(client, /name: "plugins\.item"/);
   assert.match(client, /configForms/);
   assert.match(client, /whileServed/);

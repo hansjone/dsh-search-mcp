@@ -98,8 +98,7 @@ RC2 的 `credentials/reference-updated` 事件会刷新设置卡片中的“已�
 ## DSH 0.1.1-rc.2 适配
 
 - DSH host 依赖精确锁定为 `0.1.1-rc.2`，不使用可能落到旧版本线的子包 `latest`。
-- Settings 侧栏：`settings.section` + `id: "search-mcp"`（Desktop 0.2 主入口）。
-- 设置卡片继续使用 keyed slot：`settings.plugin.item` + `key: "search-mcp"`（Web 插件配置页）。
+- Settings 侧栏：`settings.section` + `id: "search-mcp"`（Desktop 0.2 / Web 主入口，与 dsh-im-ops 相同）。
 - 新密钥通过 `credentials.set` 单向写入，凭据状态通过 `credentials.describe` 读取。
 - 监听 RC2 的 `credentials/reference-updated`，外部凭据变更后刷新状态 badge。
 - RC6/RC7 遗留的字面 `apiKey` 仍可由 Host 使用；涉及服务器数组的编辑会阻止不可见旧密钥被意外删除，并要求先迁移。
