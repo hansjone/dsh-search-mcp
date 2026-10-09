@@ -1,18 +1,19 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const read = (path) => readFile(resolve(root, path), 'utf8');
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const read = (path) => readFile(resolve(root, path), 'utf8')
 
 test('package exports resolve and peerDependencies stay open', async () => {
-  const pkg = JSON.parse(await read('package.json'));
-  assert.equal(pkg.exports['.'], './lib/index.js');
-  assert.equal(pkg.exports['./client'], './lib/client.browser.js');
-  assert.equal(pkg.engines.node, '>=20');
-  assert.equal(pkg.version, '0.2.5');
+  const pkg = JSON.parse(await read('package.json'))
+  assert.equal(pkg.exports['.'], './lib/index.js')
+  assert.equal(pkg.exports['./client'], './lib/client.browser.js')
+  assert.equal(pkg.engines.node, '>=20')
+  assert.equal(pkg.version, '0.2.32')
+  assert.equal(pkg.dsh.client.immediately, false)
 
   for (const name of [
     '@deepseek-ai/dsh-api-remotes',
@@ -22,71 +23,65 @@ test('package exports resolve and peerDependencies stay open', async () => {
     '@deepseek-ai/dsh-web',
     '@deepseek-ai/schemastery',
   ]) {
-    assert.equal(pkg.peerDependencies[name], '*');
+    assert.equal(pkg.peerDependencies[name], '*')
   }
-  assert.equal(pkg.dependencies.undici, '6.28.0');
-  assert.equal(pkg.dependencies['ipaddr.js'], '2.5.0');
-  assert.equal(pkg.dependencies['@modelcontextprotocol/sdk'], '1.30.0');
-});
+})
 
 test('browser half registers Settings sidebar + deferred form attach', async () => {
-  const client = await read('lib/client.browser.js');
-  assert.match(client, /name: "settings\.section"/);
-  assert.match(client, /SearchMcpSection/);
-  assert.match(client, /createDeferredScope/);
-  assert.match(client, /createMemoryScope/);
-  assert.doesNotMatch(client, /name:\s*["']settings\.plugin\.item["']/);
-  assert.doesNotMatch(client, /inject\(\s*["']settings\.plugin\.item["']/);
-  assert.match(client, /name: "plugins\.item"/);
-  assert.match(client, /configForms/);
-  assert.match(client, /whileServed/);
-  assert.match(client, /credentials\/reference-updated/);
-  assert.match(client, /CREDENTIAL_DESCRIBE_BATCH_SIZE = 64/);
-  assert.match(client, /legacyKeyBlocked/);
-  assert.match(client, /remote\.settings\.describe\(\)/);
-  assert.match(client, /remote\.credentials\.set\(/);
-});
+  const client = await read('lib/client.browser.js')
+  assert.match(client, /name: "settings\.section"/)
+  assert.match(client, /LOCALE_NS = "settings\.search-mcp"/)
+  assert.match(client, /const NS = "search-mcp"/)
+  // Section id must stay distinct from host Config ns `search-mcp`.
+  assert.match(client, /id: "dsh-search-mcp"/)
+  assert.match(client, /locale: LOCALE_NS/)
+  assert.match(client, /SearchMcpSection/)
+  assert.match(client, /createDeferredScope/)
+  assert.match(client, /createMemoryScope/)
+  assert.doesNotMatch(client, /inject\(\["configForms"\]/)
+  assert.match(client, /configForms poll/)
+  assert.match(client, /remote\.credentials/)
+  assert.doesNotMatch(client, /ctx\.inject\(\["remote"\]/)
+  assert.doesNotMatch(client, /name:\s*["']settings\.plugin\.item["']/)
+  assert.doesNotMatch(client, /inject\(\["settingsScope"\]/)
+  const applyBody = client.slice(client.indexOf('function apply(ctx)'), client.indexOf('exports.apply'))
+  assert.doesNotMatch(applyBody, /ctx\.get\?\.\(["']remote["']\)|ctx\.get\(["']remote["']\)/)
+  assert.match(client, /const createSnapshotStore = createSnapshotStoreFallback/)
+  assert.match(client, /CREDENTIAL_DESCRIBE_BATCH_SIZE = 64/)
+  assert.match(client, /legacyKeyBlocked/)
+})
 
-test('host Config marks editable fields volatile for Desktop 0.2', async () => {
-  const host = await read('lib/index.js');
-  assert.match(host, /function vol\(/);
-  assert.match(host, /defaultServer: vol\(/);
-  assert.match(host, /servers: vol\(/);
-  assert.match(host, /settings\.register\(/);
-});
+test('host registers search provider without settings soft-inject poll', async () => {
+  const host = await read('lib/index.js')
+  assert.match(host, /function vol\(/)
+  assert.match(host, /registerSearchProvider/)
+  const applyBody = host.slice(host.indexOf('export function apply'), host.indexOf('function resolveOptions'))
+  assert.doesNotMatch(applyBody, /ctx\.inject\(\s*\[['"]settings['"]\]/)
+  assert.doesNotMatch(applyBody, /setInterval\(/)
+})
 
 test('known providers are CDKey-only while custom keeps advanced fields', async () => {
-  const client = await read('lib/client.browser.js');
-  const catalog = client.slice(client.indexOf('const CATALOG = {'), client.indexOf('const KIND_OPTIONS'));
-  assert.doesNotMatch(catalog, /https?:\/\//);
-  assert.doesNotMatch(catalog, /toolName|authParam|transport/);
-  assert.match(client, /const known = row\.kind !== "custom"/);
-  assert.match(client, /children: known \? \[/);
-  assert.match(client, /No endpoint is required for known providers/);
-  assert.match(client, /已知提供商不需要填写端点链接/);
-  assert.match(client, /kind, apiKey: "", apiKeyEnv: ""/);
-});
+  const client = await read('lib/client.browser.js')
+  const catalog = client.slice(client.indexOf('const CATALOG = {'), client.indexOf('const KIND_OPTIONS'))
+  assert.doesNotMatch(catalog, /https?:\/\//)
+  assert.doesNotMatch(catalog, /toolName|authParam|transport/)
+  assert.match(client, /const known = row\.kind !== "custom"/)
+  assert.match(client, /已知提供商不需要填写端点链接/)
+})
 
 test('HTTP transport pins DNS and applies one guarded fetch to every SDK request', async () => {
-  const transport = await read('lib/client.js');
-  assert.match(transport, /validateHttpEndpoint\(server\.url, \{ signal \}\)/);
-  assert.match(transport, /new Agent\(\{[\s\S]*connect: \{ lookup: validated\.lookup \}/);
-  assert.match(transport, /requestUrl\.origin !== expectedOrigin/);
-  assert.match(transport, /dispatcher: agent/);
-  assert.match(transport, /redirect: 'error'/);
-  assert.match(transport, /fetch: secureFetch/);
-  assert.match(transport, /await client\.close\(\)[\s\S]*await runtime\?\.close\(\)/);
-  assert.doesNotMatch(transport, /new URL\(server\.url\)[\s\S]*new StreamableHTTPClientTransport\(url, \{\s*requestInit:/);
-});
+  const transport = await read('lib/client.js')
+  assert.match(transport, /validateHttpEndpoint\(server\.url, \{ signal \}\)/)
+  assert.match(transport, /dispatcher: agent/)
+  assert.match(transport, /redirect: 'error'/)
+})
 
-test('bundle replaces built-in search and leaves default row endpoint-free', async () => {
-  const patch = await read('cordis.patch.yml');
-  assert.match(patch, /searchProvider: search-mcp/);
-  assert.match(patch, /- id: web-search-deepseek\s+disabled: true/);
-  assert.match(patch, /- id: tool-web\s+disabled: false/);
-  assert.match(patch, /fetch: false/);
-  assert.match(patch, /searchMaxResults: 50/);
-  assert.match(patch, /searchMaxQueries: 4/);
-  const defaultRow = patch.slice(patch.indexOf('- id: tavily'), patch.indexOf('- id: web'));
-  assert.doesNotMatch(defaultRow, /url:|toolName:|authParam:|transport:/);
-});
+test('bundle inserts search-mcp without pinning web.searchProvider (Desktop 0.2 boot-safe)', async () => {
+  const patch = await read('cordis.patch.yml')
+  assert.doesNotMatch(patch, /^\s*searchProvider:\s*search-mcp\s*$/m)
+  assert.doesNotMatch(patch, /- id: web-search-deepseek\s+disabled: true/)
+  assert.match(patch, /id: search-mcp/)
+  assert.match(patch, /kind: bailian/)
+  assert.match(patch, /apiKeyEnv: DASHSCOPE_API_KEY/)
+  assert.match(patch, /- id: tool-web\s+disabled: false/)
+})

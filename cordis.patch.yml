@@ -1,21 +1,13 @@
-# dsh-search-mcp bundle layer: applied after dsh-base and dsh-web-app,
-# before the profile's own cordis.patch.yml (last write wins per row).
+# dsh-search-mcp bundle layer (Desktop 0.2 boot-safe).
 #
-# Installing this package therefore REPLACES dsh's built-in web search:
-#   - the `web` row's searchProvider switches from `deepseek-official` to
-#     `search-mcp` (the provider registered by this plugin), and
-#   - the built-in DeepSeek search provider row is disabled.
-# The model-facing `web_search` tool keeps its name and presentation; its
-# execution now goes through the search MCP server(s) configured below or in
-# the web Settings → Plugins → search-mcp section.
+# IMPORTANT: Do NOT set `web.searchProvider: search-mcp` or disable
+# `web-search-deepseek` in this patch. On Desktop 0.2 that creates a
+# load-order deadlock (web waits for search-mcp, search-mcp waits for web)
+# and freezes the UI on "Loading plugins…".
 #
-# Removing this package (dsh plugin --profile web remove dsh-search-mcp)
-# drops this whole layer and restores the built-in search exactly.
-#
-# SECURITY: no API keys are committed to this repository. Server keys are
-# supplied at runtime through `apiKeyEnv` — stored in
-# `$DSH_HOME/.credentials.yaml` (e.g. `TAVILY_API_KEY: <key>`) — or through
-# the web Settings → Plugins → search-mcp section (`apiKey` field).
+# The host `apply` registers the provider and then soft-switches the web
+# row via settings when available. Removing this package restores the
+# previous composition (no searchProvider pin left behind by this file).
 
 - insert:
     - id: search-mcp
@@ -26,29 +18,10 @@
         searchTimeoutMs: 30000
         servers:
           - id: bailian
-            kind: custom
-            transport: http
-            url: https://dashscope.aliyuncs.com/api/v1/mcps/WebSearch/mcp
-            authStyle: header
-            authParam: Authorization
-            authPrefix: 'Bearer '
+            kind: bailian
             apiKeyEnv: DASHSCOPE_API_KEY
-            toolName: bailian_web_search
 
-- id: web
-  config:
-    searchProvider: search-mcp
-
-- id: web-search-deepseek
-  disabled: true
-
-# The model-facing web_search tool is owned by dsh-tool-web (its `Config`
-# default is a hard 8-source cap, enforced by dsh-web's seam on EVERY
-# request). This plugin takes over result sizing, so raise the tool layer's
-# cap to the plugin schema maximum: `search-mcp`'s own maxResults (Settings →
-# Plugins → search-mcp) then decides how many sources actually come back.
-# `fetch` stays disabled and the base timeout is restated, because a patch
-# replaces the targeted row's whole config.
+# Raise tool-web caps so search-mcp maxResults can take effect.
 - id: tool-web
   disabled: false
   config:

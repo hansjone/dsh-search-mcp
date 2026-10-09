@@ -5,6 +5,7 @@ import { extractSearchResult } from '../lib/extract.js';
 
 test('catalog exposes every supported provider preset', () => {
   assert.deepEqual(Object.keys(SEARCH_MCP_CATALOG), [
+    'bailian',
     'tavily',
     'brave',
     'exa',
@@ -12,6 +13,18 @@ test('catalog exposes every supported provider preset', () => {
     'duckduckgo',
     'custom',
   ]);
+});
+
+test('bailian preset pins DashScope WebSearch MCP', () => {
+  const bailian = resolveServer({ id: 'bailian', kind: 'bailian', apiKeyEnv: 'DASHSCOPE_API_KEY' });
+  assert.equal(bailian.transport, 'http');
+  assert.equal(bailian.url, 'https://dashscope.aliyuncs.com/api/v1/mcps/WebSearch/mcp');
+  assert.equal(bailian.authStyle, 'header');
+  assert.equal(bailian.authParam, 'Authorization');
+  assert.equal(bailian.authPrefix, 'Bearer ');
+  assert.equal(bailian.toolName, 'bailian_web_search');
+  assert.equal(bailian.apiKeyEnv, 'DASHSCOPE_API_KEY');
+  assert.equal(bailian.needsKey, true);
 });
 
 test('known providers ignore stored connection overrides', () => {
