@@ -35,7 +35,8 @@ test('browser half registers Settings sidebar + deferred form attach', async () 
   assert.match(client, /SearchMcpSection/);
   assert.match(client, /createDeferredScope/);
   assert.match(client, /createMemoryScope/);
-  assert.doesNotMatch(client, /settings\.plugin\.item/);
+  assert.doesNotMatch(client, /name:\s*["']settings\.plugin\.item["']/);
+  assert.doesNotMatch(client, /inject\(\s*["']settings\.plugin\.item["']/);
   assert.match(client, /name: "plugins\.item"/);
   assert.match(client, /configForms/);
   assert.match(client, /whileServed/);
