@@ -12,7 +12,7 @@ test('package exports resolve and peerDependencies stay open', async () => {
   assert.equal(pkg.exports['.'], './lib/index.js');
   assert.equal(pkg.exports['./client'], './lib/client.browser.js');
   assert.equal(pkg.engines.node, '>=20');
-  assert.equal(pkg.version, '0.2.3');
+  assert.equal(pkg.version, '0.2.4');
 
   for (const name of [
     '@deepseek-ai/dsh-api-remotes',
