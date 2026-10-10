@@ -2,7 +2,8 @@
 
 用搜索类 MCP 服务器完整替代 DeepSeek Harness（DSH）内置网页搜索的独立插件。
 
-> 当前兼容基线：DeepSeek Harness `0.1.1-rc.2`，Node.js 20 或更高版本。
+> 当前兼容基线：DeepSeek Harness `>=0.2.0-rc.2`（Desktop / Web），Node.js 20 或更高版本。
+> MCP 传输使用 DSH 0.2 提供的 `@modelcontextprotocol/client`（不再依赖已从 Desktop 移除的 monolith `@modelcontextprotocol/sdk`）。
 
 ## 功能
 
@@ -17,14 +18,14 @@
 ## 安装
 
 ```powershell
-git clone https://github.com/gxpppp/dsh-search-mcp.git
+git clone https://github.com/hansjone/dsh-search-mcp.git
 cd dsh-search-mcp
 npm install
-dsh plugin --profile web add link:<dsh-search-mcp 的绝对路径>
-dsh web
+dsh plugin --profile desktop add link:<dsh-search-mcp 的绝对路径>
+# 或: dsh plugin --profile web add link:<绝对路径>
 ```
 
-`link:` 会让源码更新直接作用于 profile。修改或升级浏览器 bundle 后需要重启 DSH Web 并刷新页面。
+`link:` 会让源码更新直接作用于 profile。Desktop 0.2 可从宿主解析 `@modelcontextprotocol/client` / `undici` / `ipaddr.js` peers；但仍建议在仓库内跑一次 `npm install`（并删掉空的 `node_modules\@modelcontextprotocol` 残留目录），避免解析踩空目录。修改或升级浏览器 bundle 后需要重启 DSH 并刷新页面。
 
 如果 profile 中已有独立搜索 MCP 行，建议先移除重复入口，避免同时暴露 `mcp__...` 工具和本插件提供的 `web_search`。
 

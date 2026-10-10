@@ -12,8 +12,10 @@ test('package exports resolve and peerDependencies stay open', async () => {
   assert.equal(pkg.exports['.'], './lib/index.js')
   assert.equal(pkg.exports['./client'], './lib/client.browser.js')
   assert.equal(pkg.engines.node, '>=20')
-  assert.equal(pkg.version, '0.2.38')
+  assert.equal(pkg.version, '0.2.39')
   assert.equal(pkg.dsh.client.immediately, false)
+  assert.equal(pkg.dependencies['@modelcontextprotocol/client'], '2.0.0')
+  assert.ok(!Object.hasOwn(pkg.dependencies, '@modelcontextprotocol/sdk'))
 
   for (const name of [
     '@deepseek-ai/dsh-api-remotes',
@@ -22,6 +24,9 @@ test('package exports resolve and peerDependencies stay open', async () => {
     '@deepseek-ai/dsh-settings',
     '@deepseek-ai/dsh-web',
     '@deepseek-ai/schemastery',
+    '@modelcontextprotocol/client',
+    'ipaddr.js',
+    'undici',
   ]) {
     assert.equal(pkg.peerDependencies[name], '*')
   }
@@ -82,9 +87,13 @@ test('known providers are CDKey-only while custom keeps advanced fields', async 
 
 test('HTTP transport pins DNS and applies one guarded fetch to every SDK request', async () => {
   const transport = await read('lib/client.js')
+  assert.match(transport, /from '@modelcontextprotocol\/client'/)
+  assert.match(transport, /from '@modelcontextprotocol\/client\/stdio'/)
+  assert.doesNotMatch(transport, /from ['"]@modelcontextprotocol\/sdk/)
   assert.match(transport, /validateHttpEndpoint\(server\.url, \{ signal \}\)/)
   assert.match(transport, /dispatcher: agent/)
   assert.match(transport, /redirect: 'error'/)
+  assert.match(transport, /versionNegotiation:\s*\{\s*mode:\s*['"]auto['"]/)
 })
 
 test('bundle inserts search-mcp without pinning web.searchProvider (Desktop 0.2 boot-safe)', async () => {
