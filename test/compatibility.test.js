@@ -12,7 +12,7 @@ test('package exports resolve and peerDependencies stay open', async () => {
   assert.equal(pkg.exports['.'], './lib/index.js')
   assert.equal(pkg.exports['./client'], './lib/client.browser.js')
   assert.equal(pkg.engines.node, '>=20')
-  assert.equal(pkg.version, '0.2.32')
+  assert.equal(pkg.version, '0.2.38')
   assert.equal(pkg.dsh.client.immediately, false)
 
   for (const name of [
@@ -51,13 +51,24 @@ test('browser half registers Settings sidebar + deferred form attach', async () 
   assert.match(client, /legacyKeyBlocked/)
 })
 
-test('host registers search provider without settings soft-inject poll', async () => {
+test('host registers search provider and hot-takeover without settings mutate', async () => {
   const host = await read('lib/index.js')
-  assert.match(host, /function vol\(/)
   assert.match(host, /registerSearchProvider/)
+  assert.match(host, /function takeOverWebSearch/)
+  assert.match(host, /Symbol\.for\(['"]cordis\.original['"]\)/)
+  assert.match(host, /function unwrapWeb/)
+  assert.match(host, /provider\.search\(request, signal\)/)
+  assert.match(host, /web\.searchProviderId\s*=\s*SEARCH_MCP_PROVIDER_ID/)
+  assert.match(host, /released web search/)
+  assert.match(host, /takeOverWebSearch\(ctx, provider\)/)
+  assert.match(host, /ctx\.effect\(\(\) => \(\) => \{/)
+  // Desktop 0.2: Config must not call .volatile() (array inner is always blocked).
+  assert.doesNotMatch(host, /[.\w]\.volatile\s*\(/)
+  assert.doesNotMatch(host, /function vol\(/)
   const applyBody = host.slice(host.indexOf('export function apply'), host.indexOf('function resolveOptions'))
   assert.doesNotMatch(applyBody, /ctx\.inject\(\s*\[['"]settings['"]\]/)
   assert.doesNotMatch(applyBody, /setInterval\(/)
+  assert.doesNotMatch(applyBody, /settings\.mutate/)
 })
 
 test('known providers are CDKey-only while custom keeps advanced fields', async () => {

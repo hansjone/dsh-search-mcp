@@ -5,9 +5,9 @@
 # load-order deadlock (web waits for search-mcp, search-mcp waits for web)
 # and freezes the UI on "Loading plugins…".
 #
-# The host `apply` registers the provider and then soft-switches the web
-# row via settings when available. Removing this package restores the
-# previous composition (no searchProvider pin left behind by this file).
+# The host `apply` registers the provider and then live-pins
+# `ctx.web.searchProviderId = search-mcp` (no settings mutate / no patch pin).
+# Removing this package restores the previous composition.
 
 - insert:
     - id: search-mcp

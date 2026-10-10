@@ -122,12 +122,10 @@ RC2 的 `credentials/reference-updated` 事件会刷新设置卡片中的“已�
 
 ## 组合覆盖
 
-插件通过 `cordis.patch.yml`：
+插件通过 `cordis.patch.yml` 插入 `search-mcp` 行并提高 `tool-web` 上限；**不**在 patch 里写 `web.searchProvider`（Desktop 0.2 会死锁）。路由切换由 host `apply` 在注册后 **live-pin** `ctx.web.searchProviderId = search-mcp` 完成：
 
-- 注册 `search-mcp` provider。
-- 设置 `web.searchProvider: search-mcp`。
-- 禁用 `web-search-deepseek`。
-- 保持 `web_fetch` 关闭。
+- 注册 `search-mcp` provider，并热切换活跃搜索提供商。
+- 保持 `web_fetch` 关闭（`tool-web.fetch: false`）。
 - 请求 `tool-web.searchMaxResults: 50` 和 `searchMaxQueries: 4`。
 
 RC2 的 standard、code、cordis agent preset 各自包含 `tool-web` 行，并且都省略了 `searchMaxResults` 和 `searchMaxQueries`，因此实际采用 `dsh-tool-web` 默认值 8 和 4。agent-scoped 工具会遮蔽根层同名工具，所以根层 patch 中的 50 条请求不会提高这些 shipped preset 的实际上限。验证结果上限时必须检查 session 使用的 preset，不能只依据根层 `--dump-config`。
@@ -153,10 +151,11 @@ dsh --profile web --dump-config |
 
 预期至少包括：
 
-- `web.searchProvider: search-mcp`
-- `web-search-deepseek.disabled: true`
+- 组合中出现 `search-mcp` 行（bailian / `DASHSCOPE_API_KEY`）
 - `tool-web.disabled: false`
 - `fetch: false`
+
+说明：Desktop 0.2 下 `--dump-config` **不会**出现 `web.searchProvider: search-mcp`（避免启动死锁）；运行时由 host live-pin。验收应以错误密钥时出现 search-mcp/百炼错误、而非 DeepSeek HTTP 401 为准。
 
 实际 agent preset 的结果数和多查询上限应在隔离 profile/session 中单独验证。
 
