@@ -12,7 +12,7 @@ test('package exports resolve and peerDependencies stay open', async () => {
   assert.equal(pkg.exports['.'], './lib/index.js')
   assert.equal(pkg.exports['./client'], './lib/client.browser.js')
   assert.equal(pkg.engines.node, '>=20')
-  assert.equal(pkg.version, '0.2.41')
+  assert.equal(pkg.version, '0.2.42')
   assert.equal(pkg.dsh.client.immediately, false)
   assert.equal(pkg.dependencies['@modelcontextprotocol/client'], '2.0.0')
   assert.ok(!Object.hasOwn(pkg.dependencies, '@modelcontextprotocol/sdk'))
@@ -99,7 +99,10 @@ test('HTTP transport inherits DSH proxy with env fallback and pins DNS on direct
   assert.match(transport, /parseHttpEndpoint/)
   assert.match(transport, /validateHttpEndpoint\(server\.url, \{ signal \}\)/)
   assert.match(transport, /redirect: 'error'/)
-  assert.match(transport, /versionNegotiation:\s*\{\s*mode:\s*['"]auto['"]/)
+  // Bailian rejects the MCP 2026 era probe (HTTP 500); keep Client options
+  // at legacy default (capabilities only — no negotiation field).
+  assert.match(transport, /\{\s*capabilities:\s*\{\s*\}\s*\}/)
+  assert.doesNotMatch(transport, /mode:\s*['"]auto['"]/)
 })
 
 test('bundle inserts search-mcp without pinning web.searchProvider (Desktop 0.2 boot-safe)', async () => {
