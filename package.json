@@ -1,6 +1,6 @@
 {
   "name": "dsh-search-mcp",
-  "version": "0.2.39",
+  "version": "0.2.40",
   "description": "Replace dsh's built-in web search with search MCP servers (Tavily / Brave / Exa / Perplexity / DuckDuckGo / custom), configured from the web Settings page. When this plugin is enabled the built-in DeepSeek search provider is disabled.",
   "type": "module",
   "main": "lib/index.js",
@@ -55,6 +55,7 @@
   "peerDependencies": {
     "@deepseek-ai/dsh-api-remotes": "*",
     "@deepseek-ai/dsh-credentials": "*",
+    "@deepseek-ai/dsh-http-proxy": "*",
     "@deepseek-ai/dsh-launch-environment": "*",
     "@deepseek-ai/dsh-settings": "*",
     "@deepseek-ai/dsh-web": "*",
@@ -64,6 +65,9 @@
     "undici": "*"
   },
   "peerDependenciesMeta": {
+    "@deepseek-ai/dsh-http-proxy": {
+      "optional": true
+    },
     "@modelcontextprotocol/client": {
       "optional": true
     },

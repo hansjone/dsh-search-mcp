@@ -12,7 +12,7 @@ test('package exports resolve and peerDependencies stay open', async () => {
   assert.equal(pkg.exports['.'], './lib/index.js')
   assert.equal(pkg.exports['./client'], './lib/client.browser.js')
   assert.equal(pkg.engines.node, '>=20')
-  assert.equal(pkg.version, '0.2.39')
+  assert.equal(pkg.version, '0.2.40')
   assert.equal(pkg.dsh.client.immediately, false)
   assert.equal(pkg.dependencies['@modelcontextprotocol/client'], '2.0.0')
   assert.ok(!Object.hasOwn(pkg.dependencies, '@modelcontextprotocol/sdk'))
@@ -20,6 +20,7 @@ test('package exports resolve and peerDependencies stay open', async () => {
   for (const name of [
     '@deepseek-ai/dsh-api-remotes',
     '@deepseek-ai/dsh-credentials',
+    '@deepseek-ai/dsh-http-proxy',
     '@deepseek-ai/dsh-launch-environment',
     '@deepseek-ai/dsh-settings',
     '@deepseek-ai/dsh-web',
@@ -85,13 +86,16 @@ test('known providers are CDKey-only while custom keeps advanced fields', async 
   assert.match(client, /已知提供商不需要填写端点链接/)
 })
 
-test('HTTP transport pins DNS and applies one guarded fetch to every SDK request', async () => {
+test('HTTP transport inherits DSH proxy and pins DNS on the direct path', async () => {
   const transport = await read('lib/client.js')
   assert.match(transport, /from '@modelcontextprotocol\/client'/)
   assert.match(transport, /from '@modelcontextprotocol\/client\/stdio'/)
   assert.doesNotMatch(transport, /from ['"]@modelcontextprotocol\/sdk/)
+  assert.match(transport, /@deepseek-ai\/dsh-http-proxy/)
+  assert.match(transport, /proxyRouteFor/)
+  assert.match(transport, /parseHttpEndpoint/)
   assert.match(transport, /validateHttpEndpoint\(server\.url, \{ signal \}\)/)
-  assert.match(transport, /dispatcher: agent/)
+  assert.match(transport, /dispatcher/)
   assert.match(transport, /redirect: 'error'/)
   assert.match(transport, /versionNegotiation:\s*\{\s*mode:\s*['"]auto['"]/)
 })

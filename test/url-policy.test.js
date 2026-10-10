@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import {
   createPinnedLookup,
   isAllowedEndpointAddress,
+  isNonPublicIpLiteral,
   isPublicAddress,
+  parseHttpEndpoint,
   validateHttpEndpoint,
 } from '../lib/url-policy.js';
 
@@ -11,6 +13,19 @@ const lookup = (records) => (_hostname, options, callback) => {
   assert.equal(options.all, true);
   queueMicrotask(() => callback(null, records));
 };
+
+test('parseHttpEndpoint accepts structure without DNS', () => {
+  const parsed = parseHttpEndpoint('https://search.example/mcp');
+  assert.equal(parsed.hostname, 'search.example');
+  assert.equal(parsed.url.protocol, 'https:');
+});
+
+test('isNonPublicIpLiteral gates loopback and private literals', () => {
+  assert.equal(isNonPublicIpLiteral('127.0.0.1'), true);
+  assert.equal(isNonPublicIpLiteral('10.0.0.1'), true);
+  assert.equal(isNonPublicIpLiteral('8.8.8.8'), false);
+  assert.equal(isNonPublicIpLiteral('search.example'), false);
+});
 
 test('URL policy accepts HTTP(S) with public DNS only', async () => {
   const result = await validateHttpEndpoint('https://search.example/mcp', {
