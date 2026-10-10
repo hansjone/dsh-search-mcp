@@ -3,6 +3,22 @@ node_modules/
 *.tgz
 .DS_Store
 
+# Local scratch / one-off Desktop probes (do not commit).
+*.bak
+*.bak-*
+lib/*.bak*
+scripts/_tmp_*
+scripts/_asar-*
+scripts/_build-*
+scripts/_patch-*
+scripts/_restore-*
+scripts/_fix-*
+scripts/_swap-*
+scripts/_bump-*
+scripts/_sync-*
+scripts/_open-*
+scripts/_probe-*
+
 # Local security scan state and private project handoff.
 .mimosa/
 PROJECT_CONTEXT.md
